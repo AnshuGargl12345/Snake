@@ -1,0 +1,178 @@
+#import of different modules
+import pygame, sys, time, random
+check_errors = pygame.init()
+# Here first we will check if the pygame successfully Initialized or not?
+if check_errors[1]>0:
+    print("error")
+else:
+    print("PyGame Initialized Successfully!!!")
+    
+#Colors
+# The color method expects three parameters r,g,b combination to give the color
+white = pygame.Color(255, 255, 255) #white color for screen
+black = pygame.Color(0,0,0) #black color for score 
+green = pygame.Color(141, 252, 100) #green color for snake
+red = pygame.Color(214, 62, 62) #red color for food
+
+#size of display screen
+HEIGHT = 720
+WIDTH = 720
+game_surface = pygame.display.set_mode((HEIGHT, WIDTH))# To set the window where game will run, the set_mode expects a tupple having dimensions of the window
+game_caption = pygame.display.set_caption("Snake Game")# To set the Upper heading of the game window
+level = 15
+fps = 60
+fpsController = pygame.time.Clock()
+
+snakePos = [100,200]
+snakeBody = [[100,200],[90,200], [80,200]]
+#foodPos = [random.randrange(1,39)*20,random.randrange(4,39)*20]
+food_x = random.randrange(1,39)*20
+food_y = random.randrange(4,39)*20
+foodPos = pygame.image.load("apple.png").convert()
+foodPos = pygame.transform.scale(foodPos, (20, 20))
+game_surface.blit(foodPos, (food_x, food_y)) 
+pygame.display.flip() 
+a = True
+foodSpan = True
+score = 0
+initscore = 0
+showLev = 0
+direction = 'RIGHT'
+changeTo = 'RIGHT'
+
+def showScore(score_disp=1):
+    sFont = pygame.font.SysFont('monaco',42)
+    sSurf = sFont.render('SCORE: {0}'.format(score),True, white)
+    sRect = sSurf.get_rect()
+    if(a == True):
+        sRect.midtop = (100, 20)
+   
+        
+    game_surface.blit(sSurf, sRect)
+    pygame.display.flip()
+
+def showLevel():
+    levFont = pygame.font.SysFont('monaco',42)
+    levSurf = levFont.render('LEVEL: {0}'.format(showLev),True, white)
+    levRect = levSurf.get_rect()
+    levRect.midtop = (600, 20)
+    game_surface.blit(levSurf, levRect)
+    pygame.display.flip()
+    
+    
+def gameOver():
+    a = False
+    pygame.mixer.music.load('snakehiss2.mp3')
+    pygame.mixer.music.play()
+    GFont = pygame.font.SysFont('monaco',92)
+    GOSurf = GFont.render('GAME OVER!!',True, green)
+    GORect = GOSurf.get_rect()
+    GORect.midtop = (350, 350)
+    game_surface.blit(GOSurf, GORect)
+    showScore(0)
+    pygame.display.flip()
+    time.sleep(3)
+    pygame.display.quit()
+    pygame.quit()
+    sys.exit()
+    sRect.midtop = (350, 40)
+    pygame.display.flip()
+pygame.draw.line(game_surface,white,(0,60),(800,60),10)
+pygame.display.flip()
+    
+
+#event for quit game
+while True:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.display.quit()
+            pygame.quit()
+            sys.exit()
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_RIGHT or event.key == ord('d'):
+                changeTo = 'RIGHT'  
+            if event.key == pygame.K_LEFT or event.key == ord('a'):
+                changeTo = 'LEFT'
+            if event.key == pygame.K_UP or event.key == ord('w'):
+                changeTo = 'UP'
+            if event.key == pygame.K_DOWN or event.key == ord('s'):
+                changeTo = 'DOWN'
+            if event.key == pygame.K_ESCAPE:
+                pygame.event.post(pygame.event.Event(pygame.QUIT))
+                
+    
+    if changeTo == 'RIGHT' and not direction == 'LEFT':
+        direction = 'RIGHT'
+    if changeTo == 'UP' and not direction == 'DOWN':
+        direction = 'UP'
+    if changeTo == 'LEFT' and not direction == 'RIGHT':
+        direction = 'LEFT'
+    if changeTo == 'DOWN' and not direction == 'UP':
+        direction = 'DOWN'
+    
+        
+    if direction == 'RIGHT':
+        snakePos[0] += 20
+    if direction == 'LEFT':
+        snakePos[0] -= 20
+    if direction == 'UP':
+        snakePos[1] -= 20
+    if direction == 'DOWN':
+        snakePos[1] += 20
+        
+    # snake mechanism
+    snakeBody.insert(0, list(snakePos))
+    if snakePos[0]==food_x and snakePos[1]==food_y:
+        score+=1
+        foodSpan = False
+        pygame.mixer.music.load('Apple_Bite-Simon_Craggs-1683647397.mp3')
+        pygame.mixer.music.play()
+    else:
+        snakeBody.pop()
+    
+    game_surface.fill(black)
+        
+    for pos in snakeBody:
+        pygame.draw.rect(game_surface,red,pygame.Rect(pos[0],pos[1],20,20))
+    
+    #pygame.draw.rect(game_surface,red,pygame.Rect(foodPos[0],foodPos[1],20,20))
+    
+    showScore()
+    pygame.display.flip()
+    
+    showLevel()
+    pygame.display.flip()
+    
+    pygame.draw.line(game_surface,white,(0,60),(800,60),2)
+    pygame.display.flip()
+    
+    if foodSpan==False:
+        food_x = random.randrange(1,36)*20
+        food_y = random.randrange(4,36)*20
+        foodPos = pygame.image.load("apple.png")
+        foodPos = pygame.transform.scale(foodPos, (20, 20))
+        game_surface.blit(foodPos, (food_x, food_y)) 
+        pygame.display.flip() 
+        #foodPos = [random.randrange(1,39)*20,random.randrange(4,39)*20]
+    
+    foodSpan = True    
+    game_surface.blit(foodPos, (food_x, food_y)) 
+    pygame.display.flip() 
+    #Boundary
+    
+    if snakePos[0] > 700 or snakePos[0] < 0:
+        gameOver()
+    if snakePos[1] > 700 or snakePos[1] < 80:
+        gameOver()
+    
+    #self body collision
+    for block in snakeBody[1:]:
+        if snakePos[0] == block[0] and snakePos[1] == block[1]:
+            gameOver()
+    
+    if score == initscore+10:
+        level+=5
+        showLev+=1
+        initscore=score
+    
+    fpsController.tick(level)
